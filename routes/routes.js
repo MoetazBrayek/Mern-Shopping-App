@@ -1,20 +1,13 @@
-const {
-    Register,
-    Login,
-    UpdateDetails,
-    UpdatePassword,
-    ForgotPassword,
-    ResetPassword,
-    VerificationEmail,
-} = require("../controllers/AuthController");
-const router = require("express").Router();
-
+import {Register,Login,UpdateDetails,UpdatePassword,ForgotPassword,ResetPassword} from '../controllers/AuthController.js';
+import {createProduct } from '../controllers/ProductController.js';
+import express from 'express';
+const router = express.Router();
 router.route("/register").post(Register);
 router.route("/login").post(Login);
 router.route("/update/userDetails").put(UpdateDetails);
 router.route("/update/password").put(UpdatePassword);
 router.route("/forgotPassword").post(ForgotPassword);
 router.route("/resetPassword").post(ResetPassword);
-router.route("/verifyEmail").post(VerificationEmail);
+router.route("/product").post(createProduct);
 
-module.exports = router;
+export default router;

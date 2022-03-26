@@ -1,35 +1,11 @@
-const crypto = require("crypto");
-const createError = require("../utilis/createError");
-const asyncHandler = require("../utilis/async");
-//const verifyEmail = require("../utilis/verifyEmail");
-//const sendEmail = require("../utilis/sendEmail");
-const User = require("../models/User");
+import crypto from 'crypto';
+import {asyncHandler} from'../utilis/async.js';
+import {createError} from'../utilis/createError.js';
+import {User} from'../models/User.js';
 
-const Register = asyncHandler(async (req, res, next) => {
-    var uid = "";
-    var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-    var charactersLength = characters.length;
-
-    for (var i = 0; i < 6; i++) {
-        uid += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    const newUser = await User.create({ ...req.body, uid: uid });
-
+export const Register = asyncHandler(async (req, res, next) => {
     try {
-        const options = {
-            email: newUser.email,
-            subject: "Account Verification",
-            code: uid,
-            name: newUser.name,
-        };
-
-        //await verifyEmail(options);
-
-        
-
-        job.start();
-
+        const newUser = await User.create({ ...req.body});    
         res.status(200).send({
             status: "success",
             message: "Verification Code sent to your email.",
@@ -39,9 +15,13 @@ const Register = asyncHandler(async (req, res, next) => {
     }
 
 });
-// Mern Shopping App For Students
-const Login = asyncHandler(async (req, res, next) => {
-    // form Moetaz To Sadek actif to block the user login
+
+/**
+ * This Function To Try The Login
+ * @param {Object} req The object that represents the http call that called the api endpoint
+ * @param {Object} res The object that represents the response to the http call
+ */
+ export const Login = asyncHandler(async (req, res, next) => {
     console.log(req.body)
     const user = await User.findOne({
         email: req.body.email,
@@ -56,26 +36,12 @@ const Login = asyncHandler(async (req, res, next) => {
     sendTokenResponse(user, 200, res);
 });
 
-const VerificationEmail = asyncHandler(async (req, res, next) => {
-    const user = await User.findOne({
-        uid: req.body.verificationCode,
-    });
-
-    if (!user) throw createError(401, "Invalid verifaication code");
-
-    if (user.verify)
-        throw createError(401, "You have already verified. Login in to continue.");
-
-    user.verify = true;
-
-    await user.save({ validateBeforeSave: false });
-
-    sendTokenResponse(user, 200, res);
-});
-
-//Update user details
-
-const UpdateDetails = asyncHandler(async (req, res, next) => {
+/**
+ * This Function To Try To Update The User Name / email
+ * @param {Object} req The object that represents the http call that called the api endpoint
+ * @param {Object} res The object that represents the response to the http call
+ */
+export const UpdateDetails = asyncHandler(async (req, res, next) => {
     const newDetails = {
         name: req.body.name,
         email: req.body.email,
@@ -90,9 +56,12 @@ const UpdateDetails = asyncHandler(async (req, res, next) => {
     res.status(200).send({ status: "success", data: updateDetails });
 });
 
-//Update Password
-
-const UpdatePassword = asyncHandler(async (req, res, next) => {
+/**
+ * This Function To Try To Update The User Name / email
+ * @param {Object} req The object that represents the http call that called the api endpoint
+ * @param {Object} res The object that represents the response to the http call
+ */
+export const UpdatePassword = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id).select("+password");
 
     //compare currentPassword
@@ -113,7 +82,7 @@ const UpdatePassword = asyncHandler(async (req, res, next) => {
 
 //Forgot Password
 
-const ForgotPassword = asyncHandler(async (req, res, next) => {
+export const ForgotPassword = asyncHandler(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user)
@@ -155,7 +124,7 @@ const ForgotPassword = asyncHandler(async (req, res, next) => {
 
 //ResetPassword
 
-const ResetPassword = asyncHandler(async (req, res, next) => {
+export const ResetPassword = asyncHandler(async (req, res, next) => {
     //Hash the resetToken
 
     const resetToken = crypto
@@ -181,7 +150,7 @@ const ResetPassword = asyncHandler(async (req, res, next) => {
         .send({ status: "success", message: "Your Password has beed changed" });
 });
 
-const sendTokenResponse = (user, statusCode, res) => {
+export const sendTokenResponse = (user, statusCode, res) => {
     const token = user.genAuthToken();
 
     const userData = {
@@ -195,12 +164,3 @@ const sendTokenResponse = (user, statusCode, res) => {
     res.status(statusCode).send({ status: "success", token, authData: userData });
 };
 
-module.exports = {
-    Register,
-    Login,
-    UpdateDetails,
-    UpdatePassword,
-    ForgotPassword,
-    ResetPassword,
-    VerificationEmail,
-};
