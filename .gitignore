@@ -2,3 +2,6 @@
 node_modules/
 # Dependency Env
 .env
+.env.example
+.env.local
+.env.staging

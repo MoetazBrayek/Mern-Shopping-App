@@ -1,5 +1,7 @@
 import {Register,Login,UpdateDetails,UpdatePassword,ForgotPassword,ResetPassword} from '../controllers/AuthController.js';
 import {CreateProduct , GetProducts , GetProduct, RemoveProduct, UpdateProduct } from '../controllers/ProductController.js';
+import {UpdateShippingAddress } from '../controllers/OrderController.js';
+
 import express from 'express';
 const router = express.Router();
 router.route("/register").post(Register);
@@ -13,5 +15,6 @@ router.route("/product").get(GetProducts);
 router.route("/product/:productId").get(GetProduct);
 router.route("/product/:productId").delete(RemoveProduct);
 router.route("/product/:productId").put(UpdateProduct);
+router.route("/shipping").put(UpdateShippingAddress);
 
 export default router;

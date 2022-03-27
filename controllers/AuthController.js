@@ -1,20 +1,51 @@
+import bcrypt from'bcrypt';
+import jwt from'jsonwebtoken';
 import crypto from 'crypto';
 import {asyncHandler} from'../utilis/async.js';
 import {createError} from'../utilis/createError.js';
 import {User} from'../models/User.js';
 
+
+/**
+ * This Function To Try The Register
+ * @param {Object} req The object that represents the http call that called the api endpoint
+ * @param {Object} res The object that represents the response to the http call
+ */
 export const Register = asyncHandler(async (req, res, next) => {
     try {
-        const newUser = await User.create({ ...req.body});    
+        await User.create({ ...req.body});    
         res.status(200).send({
             status: "success",
-            message: "Verification Code sent to your email.",
+            message: "User has been created",
         });
     } catch (error) {
-        throw createError(500, "Verification email cound't be sent");
+        throw createError(500, "SOmething Wen Wrong");
     }
 
 });
+
+
+export const genAuthToken = function (id) {
+    return jwt.sign({ _id: id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIREIN,
+    });
+};
+
+export const matchPassword = async function (enteredPassword , realpass) {
+
+    return await bcrypt.compare(enteredPassword, realpass);
+ 
+};
+
+export const getResetPasswordToken = function () {
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    this.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+    return resetToken;
+};
 
 /**
  * This Function To Try The Login
@@ -29,8 +60,8 @@ export const Register = asyncHandler(async (req, res, next) => {
         actif: true,
     }).select("+password");
     if (!user) throw createError(401, `Email doesn't match`);
-
-    const isPassword = await user.matchPassword(req.body.password);
+    console.log(req.body.password)
+    const isPassword = await matchPassword(req.body.password, user.password);
     if (!isPassword) throw createError(401, `Password doesn't match`);
 
     sendTokenResponse(user, 200, res);
@@ -46,8 +77,7 @@ export const UpdateDetails = asyncHandler(async (req, res, next) => {
         name: req.body.name,
         email: req.body.email,
     };
-
-    const editDetails = await User.findByIdAndUpdate(req.user._id, newDetails, {
+    await User.findByIdAndUpdate(req.user._id, newDetails, {
         new: true,
         runValidators: true,
     });
@@ -63,8 +93,6 @@ export const UpdateDetails = asyncHandler(async (req, res, next) => {
  */
 export const UpdatePassword = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id).select("+password");
-
-    //compare currentPassword
 
     const isMatch = await user.matchPassword(req.body.currentPassword);
     if (!isMatch)
@@ -88,7 +116,7 @@ export const ForgotPassword = asyncHandler(async (req, res, next) => {
     if (!user)
         throw createError(400, `User with email ${req.body.email} is not found`);
 
-    const resetToken = user.getResetPasswordToken();
+    const resetToken = getResetPasswordToken();
 
     await user.save({ validateBeforeSave: false });
 
@@ -151,10 +179,11 @@ export const ResetPassword = asyncHandler(async (req, res, next) => {
 });
 
 export const sendTokenResponse = (user, statusCode, res) => {
-    const token = user.genAuthToken();
+    const token = genAuthToken(user.id);
+
 
     const userData = {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,

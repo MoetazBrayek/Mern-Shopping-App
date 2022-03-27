@@ -1,16 +1,13 @@
-import crypto from 'crypto';
 import mongoose from 'mongoose';
 import bcrypt from'bcrypt';
 import jwt from'jsonwebtoken';
+import crypto from 'crypto';
 
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, "Please add a name"],
         trim: true,
-    },
-    uid: {
-        type: String,
     },
     email: {
         type: String,
@@ -63,24 +60,5 @@ UserSchema.pre("save", async function (next) {
     next();
 });
 
-UserSchema.methods.genAuthToken = function () {
-    return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIREIN,
-    });
-};
-
-UserSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
-
-UserSchema.methods.getResetPasswordToken = function () {
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    this.resetPasswordToken = crypto
-        .createHash("sha256")
-        .update(resetToken)
-        .digest("hex");
-    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-    return resetToken;
-};
 
 export const User = mongoose.model("User", UserSchema);
