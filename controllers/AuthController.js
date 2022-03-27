@@ -25,16 +25,14 @@ export const Register = asyncHandler(async (req, res, next) => {
 });
 
 
-export const genAuthToken = function (id) {
-    return jwt.sign({ _id: id }, process.env.JWT_SECRET, {
+export const genAuthToken = function (userId) {
+    return jwt.sign({ _id: userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIREIN,
     });
 };
 
-export const matchPassword = async function (enteredPassword , realpass) {
-
-    return await bcrypt.compare(enteredPassword, realpass);
- 
+export const matchPassword = async function (enteredPassword, RealPassword) {
+    return await bcrypt.compare(enteredPassword, RealPassword);
 };
 
 export const getResetPasswordToken = function () {
@@ -53,14 +51,12 @@ export const getResetPasswordToken = function () {
  * @param {Object} res The object that represents the response to the http call
  */
  export const Login = asyncHandler(async (req, res, next) => {
-    console.log(req.body)
     const user = await User.findOne({
         email: req.body.email,
         verify: true,
         actif: true,
     }).select("+password");
     if (!user) throw createError(401, `Email doesn't match`);
-    console.log(req.body.password)
     const isPassword = await matchPassword(req.body.password, user.password);
     if (!isPassword) throw createError(401, `Password doesn't match`);
 
@@ -180,10 +176,8 @@ export const ResetPassword = asyncHandler(async (req, res, next) => {
 
 export const sendTokenResponse = (user, statusCode, res) => {
     const token = genAuthToken(user.id);
-
-
     const userData = {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
